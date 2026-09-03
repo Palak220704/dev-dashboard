@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 const Icons = {
   LayoutDashboard: () => (
@@ -535,8 +535,8 @@ function InteractiveTasksPieChart({ tasks }) {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [projects, setProjects] = useState(initialProjects);
-  const [tasks, setTasks] = useState(initialTasks);
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -550,6 +550,19 @@ export default function App() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authName, setAuthName] = useState('');
+  useEffect(() => {
+    // Fetch tasks from backend
+    fetch('http://localhost:5000/api/tasks')
+      .then((res) => res.json())
+      .then((data) => setTasks(data))
+      .catch((err) => console.error('Error fetching tasks:', err));
+
+    // Fetch projects from backend
+    fetch('http://localhost:5000/api/projects')
+      .then((res) => res.json())
+      .then((data) => setProjects(data))
+      .catch((err) => console.error('Error fetching projects:', err));
+  }, []);
 
   const [userProfile, setUserProfile] = useState({
     name: 'Palak',
@@ -1168,7 +1181,7 @@ export default function App() {
                       <p className="text-xs text-slate-400 mb-4 line-clamp-2 leading-relaxed">{project.description}</p>
 
                       <div className="flex flex-wrap gap-1.5 mb-6">
-                        {project.techStack.map((tech, idx) => (
+                        {project.techStack?.map((tech, idx) => (
                           <span key={idx} className="text-[11px] bg-slate-800/80 text-slate-300 px-2 py-0.5 rounded border border-slate-700/60 font-medium">
                             {tech}
                           </span>
