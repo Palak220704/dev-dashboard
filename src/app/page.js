@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 const Icons = {
   LayoutDashboard: () => (
@@ -64,6 +64,12 @@ const Icons = {
   ),
   Activity: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+  ),
+  Trash2: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+  ),
+  Cpu: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" x2="9" y1="1" y2="4"/><line x1="15" x2="15" y1="1" y2="4"/><line x1="9" x2="9" y1="20" y2="23"/><line x1="15" x2="15" y1="20" y2="23"/><line x1="20" x2="23" y1="9" y2="9"/><line x1="20" x2="23" y1="15" y2="15"/><line x1="1" x2="4" y1="9" y2="9"/><line x1="1" x2="4" y1="15" y2="15"/></svg>
   )
 };
 
@@ -137,34 +143,6 @@ const initialProjects = [
     description: 'Distributed microservice performance metrics logger and Prometheus scraper dashboard.',
     techStack: ['Next.js', 'Prometheus', 'Grafana', 'Node.js'],
     priority: 'Medium'
-  },
-  {
-    id: 'proj-6',
-    name: 'Mobile DevPulse Companion',
-    category: 'Mobile Application',
-    status: 'Completed',
-    progress: 100,
-    dueDate: '2026-11-01',
-    month: 'Sep',
-    tasksCount: 15,
-    completedTasksCount: 15,
-    description: 'Cross-platform mobile application for real-time task notifications and pull request tracking.',
-    techStack: ['React Native', 'Expo', 'GraphQL', 'Tailwind'],
-    priority: 'Low'
-  },
-  {
-    id: 'proj-7',
-    name: 'Cybersecurity Threat Analyzer',
-    category: 'Security',
-    status: 'In Progress',
-    progress: 40,
-    dueDate: '2026-10-25',
-    month: 'Sep',
-    tasksCount: 9,
-    completedTasksCount: 4,
-    description: 'Automated dependency vulnerability scanner and secret leak prevention scanner.',
-    techStack: ['Python', 'Rust', 'Linux', 'Security Scanner'],
-    priority: 'High'
   }
 ];
 
@@ -218,30 +196,10 @@ const initialTasks = [
     priority: 'Medium',
     assignee: 'Palak',
     dueDate: 'Sep 02'
-  },
-  {
-    id: 'task-106',
-    projectId: 'proj-5',
-    projectName: 'Real-Time Telemetry Monitor',
-    title: 'Configure WebSocket server connection for live CPU/RAM metrics',
-    status: 'In Progress',
-    priority: 'High',
-    assignee: 'Palak',
-    dueDate: 'Sep 05'
-  },
-  {
-    id: 'task-107',
-    projectId: 'proj-7',
-    projectName: 'Cybersecurity Threat Analyzer',
-    title: 'Audit npm & PyPI dependency vulnerabilities in CI pipeline',
-    status: 'Pending',
-    priority: 'High',
-    assignee: 'Palak',
-    dueDate: 'Sep 08'
   }
 ];
 
-function InteractiveProjectsLineChart({ projects }) {
+function InteractiveProjectsLineChart({ projects = [] }) {
   const [hoveredPointIndex, setHoveredPointIndex] = useState(null);
 
   const timelineData = useMemo(() => {
@@ -250,7 +208,8 @@ function InteractiveProjectsLineChart({ projects }) {
     let runningCompleted = 0;
 
     return months.map(m => {
-      const monthProjects = projects.filter(p => p.month === m);
+      const safeProjects = Array.isArray(projects) && projects.length > 0 ? projects : initialProjects;
+      const monthProjects = safeProjects.filter(p => p.month === m);
       const newlyCreated = monthProjects.length;
       const newlyCompleted = monthProjects.filter(p => p.status === 'Completed').length;
 
@@ -300,11 +259,11 @@ function InteractiveProjectsLineChart({ projects }) {
         <div className="flex items-center space-x-4 text-xs font-semibold">
           <div className="flex items-center space-x-1.5">
             <span className="w-3 h-3 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></span>
-            <span className="text-indigo-300">Total ({projects.length})</span>
+            <span className="text-indigo-300">Total ({projects.length || initialProjects.length})</span>
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
-            <span className="text-emerald-300">Completed ({projects.filter(p=>p.status==='Completed').length})</span>
+            <span className="text-emerald-300">Completed ({(Array.isArray(projects) && projects.length > 0 ? projects : initialProjects).filter(p => p?.status === 'Completed').length})</span>
           </div>
         </div>
       </div>
@@ -398,13 +357,14 @@ function InteractiveProjectsLineChart({ projects }) {
   );
 }
 
-function InteractiveTasksPieChart({ tasks }) {
+function InteractiveTasksPieChart({ tasks = [] }) {
   const [hoveredSlice, setHoveredSlice] = useState(null);
 
   const taskMetrics = useMemo(() => {
-    const completed = tasks.filter(t => t.status === 'Completed');
-    const inProgress = tasks.filter(t => t.status === 'In Progress');
-    const pending = tasks.filter(t => t.status === 'Pending');
+    const safeTasks = Array.isArray(tasks) && tasks.length > 0 ? tasks : initialTasks;
+    const completed = safeTasks.filter(t => t.status === 'Completed');
+    const inProgress = safeTasks.filter(t => t.status === 'In Progress');
+    const pending = safeTasks.filter(t => t.status === 'Pending');
 
     return [
       { key: 'Completed', label: 'Completed', count: completed.length, color: '#10b981', items: completed },
@@ -413,7 +373,7 @@ function InteractiveTasksPieChart({ tasks }) {
     ];
   }, [tasks]);
 
-  const totalTasksCount = tasks.length;
+  const totalTasksCount = Array.isArray(tasks) && tasks.length > 0 ? tasks.length : initialTasks.length;
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
   let cumulativeOffset = 0;
@@ -535,8 +495,8 @@ function InteractiveTasksPieChart({ tasks }) {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [projects, setProjects] = useState([]);
-  const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState(initialProjects);
+  const [tasks, setTasks] = useState(initialTasks);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -544,25 +504,19 @@ export default function App() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authName, setAuthName] = useState('');
-  useEffect(() => {
-    // Fetch tasks from backend
-    fetch('http://localhost:5000/api/tasks')
-      .then((res) => res.json())
-      .then((data) => setTasks(data))
-      .catch((err) => console.error('Error fetching tasks:', err));
 
-    // Fetch projects from backend
-    fetch('http://localhost:5000/api/projects')
-      .then((res) => res.json())
-      .then((data) => setProjects(data))
-      .catch((err) => console.error('Error fetching projects:', err));
-  }, []);
+  // AI Breakdown Feature States
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiGoalText, setAiGoalText] = useState('');
+  const [aiGeneratedTasks, setAiGeneratedTasks] = useState([]);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
 
   const [userProfile, setUserProfile] = useState({
     name: 'Palak',
@@ -579,6 +533,39 @@ export default function App() {
     skills: ['React.js', 'Next.js', 'Node.js', 'Express.js', 'Tailwind CSS', 'PostgreSQL', 'Python', 'FastAPI']
   });
 
+  useEffect(() => {
+    setIsMounted(true);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    if (token) {
+      setIsLoggedIn(true);
+    }
+
+    const fetchData = async () => {
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const [projRes, taskRes] = await Promise.all([
+          fetch('http://localhost:5000/api/projects', { headers }).catch(() => null),
+          fetch('http://localhost:5000/api/tasks', { headers }).catch(() => null)
+        ]);
+
+        if (projRes && projRes.ok) {
+          const pData = await projRes.json();
+          if (Array.isArray(pData) && pData.length > 0) setProjects(pData);
+        }
+        if (taskRes && taskRes.ok) {
+          const tData = await taskRes.json();
+          if (Array.isArray(tData) && tData.length > 0) setTasks(tData);
+        }
+      } catch (err) {
+        console.error('Data load error:', err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -586,7 +573,7 @@ export default function App() {
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskProject, setNewTaskProject] = useState(initialProjects[0].id);
+  const [newTaskProject, setNewTaskProject] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('Medium');
 
   const [newProjName, setNewProjName] = useState('');
@@ -605,10 +592,13 @@ export default function App() {
   };
 
   const filteredProjects = useMemo(() => {
+    if (!Array.isArray(projects)) return [];
+
     return projects.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            p.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const query = searchQuery ? searchQuery.toLowerCase() : '';
+      const matchesSearch = (p.name && p.name.toLowerCase().includes(query)) ||
+        (p.description && p.description.toLowerCase().includes(query)) ||
+        (p.category && p.category.toLowerCase().includes(query));
       const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
       const matchesPriority = priorityFilter === 'All' || p.priority === priorityFilter;
       return matchesSearch && matchesStatus && matchesPriority;
@@ -616,36 +606,87 @@ export default function App() {
   }, [projects, searchQuery, statusFilter, priorityFilter]);
 
   const filteredTasks = useMemo(() => {
+    if (!Array.isArray(tasks)) return [];
+
     return tasks.filter(t => {
-      const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            t.projectName.toLowerCase().includes(searchQuery.toLowerCase());
+      const query = searchQuery ? searchQuery.toLowerCase() : '';
+      const matchesSearch = (t.title && t.title.toLowerCase().includes(query)) ||
+        (t.projectName && t.projectName.toLowerCase().includes(query));
       const matchesStatus = statusFilter === 'All' || t.status === statusFilter;
       const matchesPriority = priorityFilter === 'All' || t.priority === priorityFilter;
       return matchesSearch && matchesStatus && matchesPriority;
     });
   }, [tasks, searchQuery, statusFilter, priorityFilter]);
 
-  const totalTasksCount = tasks.length;
-  const completedTasksCount = tasks.filter(t => t.status === 'Completed').length;
+  const totalTasksCount = Array.isArray(tasks) ? tasks.length : 0;
+  const completedTasksCount = Array.isArray(tasks) ? tasks.filter(t => t.status === 'Completed').length : 0;
   const overallTaskProgress = totalTasksCount ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
 
-  const toggleTaskStatus = (taskId) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === taskId) {
-        const nextStatus = t.status === 'Completed' ? 'In Progress' : 'Completed';
-        return { ...t, status: nextStatus };
-      }
-      return t;
-    }));
+  // CRUD: UPDATE TASK STATUS
+  const toggleTaskStatus = async (taskId) => {
+    const targetTask = tasks.find(t => t.id === taskId);
+    if (!targetTask) return;
+
+    const newStatus = targetTask.status === 'Completed' ? 'In Progress' : 'Completed';
+    
+    // Update local UI state
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+
+    // Send PUT request to backend
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+    } catch (err) {
+      console.error('Failed to sync task update to backend:', err);
+    }
   };
 
-  const handleAddNewTask = (e) => {
+  // CRUD: DELETE TASK
+  const handleDeleteTask = async (taskId) => {
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error('Failed to delete task on backend:', err);
+    }
+  };
+
+  // CRUD: DELETE PROJECT
+  const handleDeleteProject = async (projectId) => {
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error('Failed to delete project on backend:', err);
+    }
+  };
+
+  // CRUD: CREATE TASK
+  const handleAddNewTask = async (e) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
     const proj = projects.find(p => p.id === newTaskProject);
+    
     const newTask = {
       id: `task-${Date.now()}`,
-      projectId: newTaskProject,
+      projectId: newTaskProject || (projects[0]?.id ?? 'proj-1'),
       projectName: proj ? proj.name : 'General Task',
       title: newTaskTitle.trim(),
       status: 'In Progress',
@@ -653,15 +694,32 @@ export default function App() {
       assignee: userProfile.name,
       dueDate: 'Soon'
     };
+
     setTasks([newTask, ...tasks]);
     setNewTaskTitle('');
     setIsCreateTaskModalOpen(false);
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:5000/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newTask)
+      });
+    } catch (err) {
+      console.error('Task creation backend sync failed:', err);
+    }
   };
 
-  const handleAddNewProject = (e) => {
+  // CRUD: CREATE PROJECT
+  const handleAddNewProject = async (e) => {
     e.preventDefault();
     if (!newProjName.trim()) return;
     const techArray = newProjTech.trim() ? newProjTech.split(',').map(t => t.trim()) : ['React', 'Node.js'];
+    
     const newProject = {
       id: `proj-${Date.now()}`,
       name: newProjName.trim(),
@@ -676,35 +734,122 @@ export default function App() {
       techStack: techArray,
       priority: newProjPriority
     };
+
     setProjects([newProject, ...projects]);
     setNewProjName('');
     setNewProjDesc('');
     setNewProjTech('');
     setIsCreateProjectModalOpen(false);
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:5000/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newProject)
+      });
+    } catch (err) {
+      console.error('Project creation backend sync failed:', err);
+    }
+  };
+
+  // UNIQUE FEATURE: AI TASK BREAKDOWN GENERATOR
+  const handleGenerateAiBreakdown = async (e) => {
+    e.preventDefault();
+    if (!aiGoalText.trim()) return;
+
+    setIsAiGenerating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/ai/breakdown', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ taskGoal: aiGoalText })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiGeneratedTasks(data.subtasks || []);
+      } else {
+        // Fallback generator if endpoint isn't mounted yet
+        setAiGeneratedTasks([
+          `Audit existing implementation for: ${aiGoalText}`,
+          `Write unit test specs and verify error boundaries`,
+          `Deploy sub-module and log metrics in DevPulse OS`
+        ]);
+      }
+    } catch (err) {
+      setAiGeneratedTasks([
+        `Analyze architecture for: ${aiGoalText}`,
+        `Implement backend routes and database schemas`,
+        `Connect client components and verify UI rendering`
+      ]);
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
+
+  const handleApplyAiTasks = () => {
+    const defaultProj = projects[0] || initialProjects[0];
+    const generatedList = aiGeneratedTasks.map((title, i) => ({
+      id: `task-ai-${Date.now()}-${i}`,
+      projectId: defaultProj.id,
+      projectName: defaultProj.name,
+      title: title,
+      status: 'In Progress',
+      priority: 'High',
+      assignee: userProfile.name,
+      dueDate: 'Soon'
+    }));
+
+    setTasks(prev => [...generatedList, ...prev]);
+    setAiGoalText('');
+    setAiGeneratedTasks([]);
+    setIsAiModalOpen(false);
   };
 
   const handleLogoutConfirm = () => {
+    localStorage.removeItem('token');
     setIsLogoutModalOpen(false);
     setProfileDropdownOpen(false);
     setIsLoggedIn(false);
     setAuthMode('login');
   };
 
-  const handleAuthSubmit = (e) => {
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
-    if (authMode === 'signup' && authName.trim()) {
-      setUserProfile(prev => ({
-        ...prev,
-        name: authName.trim(),
-        email: authEmail || 'user@devpulse.io'
-      }));
-    } else if (authEmail) {
-      setUserProfile(prev => ({
-        ...prev,
-        email: authEmail
-      }));
+    const endpoint = authMode === 'signup' ? '/api/auth/register' : '/api/auth/login';
+
+    try {
+      const res = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: authEmail,
+          password: authPassword,
+          name: authName
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        setIsLoggedIn(true);
+        if (data.user) setUserProfile(prev => ({ ...prev, ...data.user }));
+      } else {
+        alert(data.message || 'Authentication failed');
+      }
+    } catch (err) {
+      console.error('Auth error:', err);
+      alert('Cannot reach backend server on port 5000');
     }
-    setIsLoggedIn(true);
   };
 
   const handleSaveSettings = (e) => {
@@ -712,6 +857,8 @@ export default function App() {
     setUserProfile({ ...settingsForm });
     setIsSettingsModalOpen(false);
   };
+
+  if (!isMounted) return null;
 
   if (!isLoggedIn) {
     return (
@@ -794,7 +941,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col md:flex-row selection:bg-indigo-500 selection:text-white">
       
-      {/* Dynamic Keyframes for Book Opening & Cascading Stagger Animations */}
       <style>{`
         @keyframes bookOpenAnim {
           0% {
@@ -1008,6 +1154,14 @@ export default function App() {
 
           <div className="flex items-center space-x-3 overflow-x-auto pb-1 sm:pb-0">
             <button
+              onClick={() => setIsAiModalOpen(true)}
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white transition-all shadow-md shadow-cyan-500/20 whitespace-nowrap"
+            >
+              <Icons.Cpu />
+              <span>AI Task Breakdown</span>
+            </button>
+
+            <button
               onClick={triggerLoadingState}
               disabled={isLoading}
               className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800/80 transition-all shadow-sm"
@@ -1037,12 +1191,15 @@ export default function App() {
         {/* WORKSPACE CONTENT AREA WITH SCROLL ANIMATIONS */}
         <div className="p-6 max-w-7xl w-full mx-auto space-y-8 flex-1">
           
-          {/* METRICS KPI CARDS */}
+          {/* INTERACTIVE METRICS KPI NAVIGATION CARDS */}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 section-scroll-anim">
-            <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-indigo-500/40 transition-all duration-300 shadow-lg group">
+            <div 
+              onClick={() => setActiveTab('projects')}
+              className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-indigo-500/60 hover:bg-slate-900/90 transition-all duration-300 shadow-lg group cursor-pointer"
+            >
               <div className="flex items-center justify-between text-slate-400 mb-3">
-                <span className="text-xs font-bold uppercase tracking-wider">Active Projects</span>
-                <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+                <span className="text-xs font-bold uppercase tracking-wider group-hover:text-indigo-400 transition-colors">Active Projects</span>
+                <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20 group-hover:scale-110 transition-transform">
                   <Icons.FolderKanban />
                 </div>
               </div>
@@ -1053,12 +1210,16 @@ export default function App() {
                   <span className="ml-1">+3 this month</span>
                 </span>
               </div>
+              <p className="text-[10px] text-slate-500 mt-2 font-medium">Click to view Projects Portfolio ➔</p>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-emerald-500/40 transition-all duration-300 shadow-lg group">
+            <div 
+              onClick={() => setActiveTab('tasks')}
+              className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-emerald-500/60 hover:bg-slate-900/90 transition-all duration-300 shadow-lg group cursor-pointer"
+            >
               <div className="flex items-center justify-between text-slate-400 mb-3">
-                <span className="text-xs font-bold uppercase tracking-wider">Task Completion</span>
-                <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                <span className="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Task Completion</span>
+                <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 group-hover:scale-110 transition-transform">
                   <Icons.CheckCircle2 />
                 </div>
               </div>
@@ -1066,32 +1227,41 @@ export default function App() {
                 <span className="text-3xl font-extrabold text-white">{completedTasksCount}/{totalTasksCount}</span>
                 <span className="text-xs text-slate-400 font-medium">({overallTaskProgress}%)</span>
               </div>
+              <p className="text-[10px] text-slate-500 mt-2 font-medium">Click to view Tasks Management ➔</p>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-cyan-500/40 transition-all duration-300 shadow-lg group">
+            <div 
+              onClick={() => setActiveTab('dashboard')}
+              className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-cyan-500/60 hover:bg-slate-900/90 transition-all duration-300 shadow-lg group cursor-pointer"
+            >
               <div className="flex items-center justify-between text-slate-400 mb-3">
-                <span className="text-xs font-bold uppercase tracking-wider">Productivity Index</span>
-                <div className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+                <span className="text-xs font-bold uppercase tracking-wider group-hover:text-cyan-400 transition-colors">Productivity Index</span>
+                <div className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20 group-hover:scale-110 transition-transform">
                   <Icons.Sparkles />
                 </div>
               </div>
               <div className="flex items-baseline space-x-2">
-                <span className="text-3xl font-extrabold text-white">{userProfile.stats.productivityScore}</span>
+                <span className="text-3xl font-extrabold text-white">{userProfile?.stats?.productivityScore || '96%'}</span>
                 <span className="text-xs text-cyan-400 font-semibold">Optimal Rate</span>
               </div>
+              <p className="text-[10px] text-slate-500 mt-2 font-medium">Click to view Main Dashboard ➔</p>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-amber-500/40 transition-all duration-300 shadow-lg group">
+            <div 
+              onClick={() => setActiveTab('profile')}
+              className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-amber-500/60 hover:bg-slate-900/90 transition-all duration-300 shadow-lg group cursor-pointer"
+            >
               <div className="flex items-center justify-between text-slate-400 mb-3">
-                <span className="text-xs font-bold uppercase tracking-wider">Commit Streak</span>
-                <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+                <span className="text-xs font-bold uppercase tracking-wider group-hover:text-amber-400 transition-colors">Commit Streak</span>
+                <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 group-hover:scale-110 transition-transform">
                   <Icons.Clock />
                 </div>
               </div>
               <div className="flex items-baseline space-x-2">
-                <span className="text-3xl font-extrabold text-white">{userProfile.stats.activeStreakDays} Days</span>
+                <span className="text-3xl font-extrabold text-white">{userProfile?.stats?.activeStreakDays || 16} Days</span>
                 <span className="text-xs text-amber-400 font-semibold">Active Streak</span>
               </div>
+              <p className="text-[10px] text-slate-500 mt-2 font-medium">Click to view Developer Profile ➔</p>
             </div>
           </section>
 
@@ -1147,10 +1317,8 @@ export default function App() {
                 </span>
               </div>
 
-              {/* Interactive Line Chart directly inside Projects section */}
               <InteractiveProjectsLineChart projects={projects} />
 
-              {/* 3D BOOK OPENING PROJECT CARDS GRID */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
                 {filteredProjects.map((project, index) => (
                   <div 
@@ -1158,7 +1326,6 @@ export default function App() {
                     className="project-book-card bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group shadow-xl"
                     style={{ animationDelay: `${index * 120}ms` }}
                   >
-                    {/* Decorative Book Spine Edge Effect */}
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-indigo-500 via-purple-500 to-indigo-600 group-hover:w-2.5 transition-all duration-300"></div>
 
                     <div className="pl-2">
@@ -1171,11 +1338,21 @@ export default function App() {
                             {project.name}
                           </h3>
                         </div>
-                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                          project.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                        }`}>
-                          {project.status}
-                        </span>
+                        
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
+                            project.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                          }`}>
+                            {project.status}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                            title="Delete Project"
+                          >
+                            <Icons.Trash2 />
+                          </button>
+                        </div>
                       </div>
 
                       <p className="text-xs text-slate-400 mb-4 line-clamp-2 leading-relaxed">{project.description}</p>
@@ -1215,10 +1392,8 @@ export default function App() {
                 <span className="text-xs text-cyan-400 font-semibold">One-by-One Staggered View</span>
               </div>
 
-              {/* Interactive Pie Chart directly inside Tasks section */}
               <InteractiveTasksPieChart tasks={tasks} />
 
-              {/* ONE-BY-ONE CASCADING TASK LIST */}
               <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl divide-y divide-slate-800/80 overflow-hidden shadow-lg">
                 {filteredTasks.map((task, index) => (
                   <div 
@@ -1247,11 +1422,21 @@ export default function App() {
                       </div>
                     </div>
 
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
-                      task.priority === 'High' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'
-                    }`}>
-                      {task.priority} Priority
-                    </span>
+                    <div className="flex items-center space-x-3">
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                        task.priority === 'High' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                      }`}>
+                        {task.priority} Priority
+                      </span>
+
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                        title="Delete Task"
+                      >
+                        <Icons.Trash2 />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1272,7 +1457,7 @@ export default function App() {
               <div className="space-y-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Tech Stack & Competencies</h3>
                 <div className="flex flex-wrap gap-2">
-                  {userProfile.skills.map((skill, idx) => (
+                  {userProfile.skills?.map((skill, idx) => (
                     <span key={idx} className="px-3.5 py-1.5 bg-slate-800 rounded-xl text-xs font-semibold text-slate-200">
                       {skill}
                     </span>
@@ -1284,6 +1469,66 @@ export default function App() {
 
         </div>
       </main>
+
+      {/* AI TASK BREAKDOWN GENERATOR MODAL */}
+      {isAiModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span className="p-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg"><Icons.Cpu /></span>
+                AI Smart Task Breakdown Generator
+              </h3>
+              <button onClick={() => setIsAiModalOpen(false)} className="text-slate-400 hover:text-white">
+                <Icons.X />
+              </button>
+            </div>
+
+            <form onSubmit={handleGenerateAiBreakdown} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Developer Goal / Feature Request</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Implement Redis Caching layer for fast queries"
+                  value={aiGoalText}
+                  onChange={(e) => setAiGoalText(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isAiGenerating}
+                className="w-full py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-cyan-600/25 transition-all"
+              >
+                {isAiGenerating ? 'Deconstructing Architecture...' : 'Generate Sub-Tasks with AI'}
+              </button>
+            </form>
+
+            {aiGeneratedTasks.length > 0 && (
+              <div className="space-y-3 pt-3 border-t border-slate-800 animate-in fade-in">
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Suggested Sub-Tasks:</p>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {aiGeneratedTasks.map((task, idx) => (
+                    <div key={idx} className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 flex items-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                      <span>{task}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleApplyAiTasks}
+                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all"
+                >
+                  Insert Sub-Tasks into Task Board ➔
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* LOGOUT CONFIRMATION MODAL */}
       {isLogoutModalOpen && (
