@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from './lib/api';
 
 const Icons = {
   LayoutDashboard: () => (
@@ -535,12 +535,14 @@ export default function App() {
   });
 
   useEffect(() => {
-    setIsMounted(true);
+    Promise.resolve().then(() => setIsMounted(true));
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
     if (token) {
-      setIsLoggedIn(true);
+      Promise.resolve().then(() => setIsLoggedIn(true));
     }
+  
+
 
     const fetchData = async () => {
       try {
