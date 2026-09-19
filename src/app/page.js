@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
+import { apiFetch } from '@/lib/api';
 
 const Icons = {
   LayoutDashboard: () => (
@@ -543,21 +544,13 @@ export default function App() {
 
     const fetchData = async () => {
       try {
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
-        const [projRes, taskRes] = await Promise.all([
-          fetch('http://localhost:5000/api/projects', { headers }).catch(() => null),
-          fetch('http://localhost:5000/api/tasks', { headers }).catch(() => null)
+        const [pData, tData] = await Promise.all([
+          apiFetch('/api/projects').catch(() => null),
+          apiFetch('/api/tasks').catch(() => null)
         ]);
 
-        if (projRes && projRes.ok) {
-          const pData = await projRes.json();
-          if (Array.isArray(pData) && pData.length > 0) setProjects(pData);
-        }
-        if (taskRes && taskRes.ok) {
-          const tData = await taskRes.json();
-          if (Array.isArray(tData) && tData.length > 0) setTasks(tData);
-        }
+        if (Array.isArray(pData) && pData.length > 0) setProjects(pData);
+        if (Array.isArray(tData) && tData.length > 0) setTasks(tData);
       } catch (err) {
         console.error('Data load error:', err);
       }
@@ -634,13 +627,8 @@ export default function App() {
 
     // Send PUT request to backend
     try {
-      const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      await apiFetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ status: newStatus })
       });
     } catch (err) {
@@ -653,10 +641,8 @@ export default function App() {
     setTasks(prev => prev.filter(t => t.id !== taskId));
 
     try {
-      const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await apiFetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE'
       });
     } catch (err) {
       console.error('Failed to delete task on backend:', err);
@@ -668,10 +654,8 @@ export default function App() {
     setProjects(prev => prev.filter(p => p.id !== projectId));
 
     try {
-      const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/projects/${projectId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await apiFetch(`/api/projects/${projectId}`, {
+        method: 'DELETE'
       });
     } catch (err) {
       console.error('Failed to delete project on backend:', err);
@@ -700,13 +684,8 @@ export default function App() {
     setIsCreateTaskModalOpen(false);
 
     try {
-      const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/tasks', {
+      await apiFetch('/api/tasks', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(newTask)
       });
     } catch (err) {
@@ -742,13 +721,8 @@ export default function App() {
     setIsCreateProjectModalOpen(false);
 
     try {
-      const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/projects', {
+      await apiFetch('/api/projects', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(newProject)
       });
     } catch (err) {
@@ -763,19 +737,13 @@ export default function App() {
 
     setIsAiGenerating(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/ai/breakdown', {
+      const data = await apiFetch('/api/ai/breakdown', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ taskGoal: aiGoalText })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setAiGeneratedTasks(data.subtasks || []);
+      if (data && data.subtasks) {
+        setAiGeneratedTasks(data.subtasks);
       } else {
         // Fallback generator if endpoint isn't mounted yet
         setAiGeneratedTasks([
@@ -827,9 +795,8 @@ export default function App() {
     const endpoint = authMode === 'signup' ? '/api/auth/register' : '/api/auth/login';
 
     try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const data = await apiFetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: authEmail,
           password: authPassword,
@@ -837,9 +804,7 @@ export default function App() {
         }),
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.token) {
+      if (data && data.token) {
         localStorage.setItem('token', data.token);
         setIsLoggedIn(true);
         if (data.user) setUserProfile(prev => ({ ...prev, ...data.user }));
@@ -848,7 +813,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('Auth error:', err);
-      alert('Cannot reach backend server on port 5000');
+      alert(err.message || 'Cannot reach backend server');
     }
   };
 
